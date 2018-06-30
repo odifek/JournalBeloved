@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Journal Beloved</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="hint_note_details">Enter note details herre</string>
+    <string name="hint_note_title">Note Title</string>
+    <string name="msg_note_saved">Note saved</string>
+    <string name="edit_note">Edit note</string>
+    <string name="add_note">Add note</string>
+    <string name="note_saved">Note saved</string>
+</resources>
