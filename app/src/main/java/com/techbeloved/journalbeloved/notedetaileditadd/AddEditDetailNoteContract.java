@@ -2,8 +2,9 @@ package com.techbeloved.journalbeloved.notedetaileditadd;
 
 import com.techbeloved.journalbeloved.BasePresenter;
 import com.techbeloved.journalbeloved.BaseView;
+import com.techbeloved.journalbeloved.model.Note;
 
-public interface AddEditDetailNoteContract {
+interface AddEditDetailNoteContract {
 
     interface View extends BaseView<Presenter> {
 
@@ -25,11 +26,13 @@ public interface AddEditDetailNoteContract {
         void showDetail(String detail);
 
         boolean isActive();
+
+        boolean isDataMissing();
     }
 
     interface Presenter extends BasePresenter {
 
-        void saveNote(String title, String detail);
+        void saveNote(Note note);
 
         void populateNote();
 

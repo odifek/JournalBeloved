@@ -18,9 +18,9 @@ public class NotesLocalDataSource implements NotesDataSource {
 
     private static volatile NotesLocalDataSource INSTANCE;
 
-    private NotesDao mNotesDao;
+    private final NotesDao mNotesDao;
 
-    private AppExecutors mAppExecutors;
+    private final AppExecutors mAppExecutors;
 
     // Prevent direct instantiation
     private NotesLocalDataSource(@NonNull AppExecutors appExecutors, @NonNull NotesDao notesDao) {

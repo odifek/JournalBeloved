@@ -25,13 +25,13 @@ public class NotesRepository implements NotesDataSource {
     /**
      * This variable has package local visibility so it can be accessed from tests.
      */
-    Map<String, Note> mCachedNotes;
+    private Map<String, Note> mCachedNotes;
 
     /**
      * Marks the cache as invalid, to force an update the next time data is requested. This variable
      * has package local visibility so it can be accessed from tests.
      */
-    boolean mCacheIsDirty = false;
+    private boolean mCacheIsDirty = false;
 
     // Prevent direct instantiation
     private NotesRepository(@NonNull NotesDataSource notesRemoteDataSource,

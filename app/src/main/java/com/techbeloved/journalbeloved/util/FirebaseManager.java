@@ -1,9 +1,10 @@
 package com.techbeloved.journalbeloved.util;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.util.Log;
 
-import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -17,8 +18,10 @@ import java.util.List;
 
 public class FirebaseManager implements ValueEventListener {
 
+    private static final String TAG = FirebaseManager.class.getSimpleName();
+
     private volatile static FirebaseManager sFirebaseManager;
-    private DatabaseReference mNoteReference;
+    private final DatabaseReference mNoteReference;
     private FirebaseCallbacks mCallbacks;
 
     public static synchronized  FirebaseManager getInstance(
@@ -32,6 +35,14 @@ public class FirebaseManager implements ValueEventListener {
     }
 
     private FirebaseManager(String userId, FirebaseCallbacks callbacks) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            // User is signed in
+            Log.i(TAG, "FirebaseManager: User is: " + user.getDisplayName());
+        } else {
+            // No user is signed in
+            Log.i(TAG, "FirebaseManager: User is not logged in");
+        }
         mNoteReference = FirebaseDatabase.getInstance()
                 .getReference()
                 .child(userId)
@@ -57,15 +68,15 @@ public class FirebaseManager implements ValueEventListener {
         mNoteReference.child(note.getId()).setValue(note);
     }
 
-    public void deleteNote(Note note) {
-        mNoteReference.child(note.getId()).removeValue();
+    public void deleteNote(String noteId) {
+        mNoteReference.child(noteId).removeValue();
     }
 
     private void addNoteListeners() {
         mNoteReference.addValueEventListener(this);
     }
 
-    public void removeListeners() {
+    private void removeListeners() {
         mNoteReference.removeEventListener(this);
     }
 
@@ -87,5 +98,19 @@ public class FirebaseManager implements ValueEventListener {
     public void destroy() {
         sFirebaseManager = null;
         mCallbacks = null;
+    }
+
+    public void loadNote(String noteId) {
+        mNoteReference.child(noteId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                mCallbacks.onNoteLoaded(dataSnapshot.getValue(Note.class));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 }

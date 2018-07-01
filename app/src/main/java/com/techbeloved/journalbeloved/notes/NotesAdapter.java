@@ -15,11 +15,11 @@ import java.util.List;
 
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHolder> {
 
-    private ListItemClickListener mOnClickListener;
+    private final ListItemClickListener mOnClickListener;
 
     private List<Note> mNotes;
 
-    private Context mContext;
+    private final Context mContext;
 
     public interface ListItemClickListener {
         void onListItemClick(String noteId);
@@ -70,8 +70,8 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHol
 
     class NotesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView tvNoteTitle;
-        TextView tvNoteSummary;
+        final TextView tvNoteTitle;
+        final TextView tvNoteSummary;
 
         NotesViewHolder(View itemView) {
             super(itemView);

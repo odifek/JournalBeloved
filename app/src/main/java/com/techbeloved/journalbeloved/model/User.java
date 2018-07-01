@@ -4,8 +4,8 @@ import com.google.firebase.database.IgnoreExtraProperties;
 
 @IgnoreExtraProperties
 public class User {
-    public String name;
-    public String userId;
+    private String name;
+    private String userId;
 
     public User(){
 

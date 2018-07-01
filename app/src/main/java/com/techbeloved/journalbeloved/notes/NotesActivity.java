@@ -25,11 +25,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.techbeloved.journalbeloved.BuildConfig;
-import com.techbeloved.journalbeloved.Injection;
 import com.techbeloved.journalbeloved.R;
 import com.techbeloved.journalbeloved.model.Note;
 import com.techbeloved.journalbeloved.model.User;
-import com.techbeloved.journalbeloved.util.ActivityUtils;
+import com.techbeloved.journalbeloved.notedetaileditadd.AddEditDetailNoteActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,29 +36,20 @@ import java.util.List;
 public class NotesActivity extends AppCompatActivity implements NotesAdapter.ListItemClickListener, NotesContract.View {
 
     private static final String TAG = NotesActivity.class.getSimpleName();
-
-    private NotesPresenter mNotesPresenter;
-
-    NotesAdapter mListAdapter;
-
-    NotesContract.Presenter mPresenter;
-
     private static final int RC_SIGN_IN = 628;
     private static final String ANONYMOUS = "anonymous";
-    private DatabaseReference mFirebaseDatabase;
-    private FirebaseDatabase mFirebaseInstance;
-
-    FirebaseUser mFirebaseUser;
-    private FirebaseAuth mFirebaseAuth;
-    private String mUsername;
-
-    private String mUserId;
-
-    private boolean mUserAuthenticated;
-
-    List<AuthUI.IdpConfig> providers = Arrays.asList(
+    private NotesAdapter mListAdapter;
+    private NotesContract.Presenter mPresenter;
+    private FirebaseUser mFirebaseUser;
+    private final List<AuthUI.IdpConfig> providers = Arrays.asList(
             new AuthUI.IdpConfig.EmailBuilder().build(),
             new AuthUI.IdpConfig.GoogleBuilder().build());
+    private DatabaseReference mFirebaseDatabase;
+    private FirebaseDatabase mFirebaseInstance;
+    private FirebaseAuth mFirebaseAuth;
+    private String mUsername;
+    private String mUserId;
+    private boolean mUserAuthenticated;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,10 +70,10 @@ public class NotesActivity extends AppCompatActivity implements NotesAdapter.Lis
         if (mFirebaseUser == null) {
             startActivityForResult(
                     AuthUI.getInstance()
-                    .createSignInIntentBuilder()
-                    .setAvailableProviders(providers)
-                    .setIsSmartLockEnabled(!BuildConfig.DEBUG, true)
-                    .build(),
+                            .createSignInIntentBuilder()
+                            .setAvailableProviders(providers)
+                            .setIsSmartLockEnabled(!BuildConfig.DEBUG, true)
+                            .build(),
                     RC_SIGN_IN);
         } else {
             // Go ahead with other things
@@ -102,6 +92,9 @@ public class NotesActivity extends AppCompatActivity implements NotesAdapter.Lis
             mUsername = mFirebaseUser.getDisplayName();
             mUserId = mFirebaseUser.getUid();
             setupUi();
+
+            mPresenter = new NotesPresenter(this);
+            mPresenter.onResume();
         } else { // Re attempt sign in
             startActivityForResult(
                     AuthUI.getInstance()
@@ -211,7 +204,7 @@ public class NotesActivity extends AppCompatActivity implements NotesAdapter.Lis
 
     @Override
     public void onListItemClick(String noteId) {
-
+        mPresenter.onItemClicked(noteId);
     }
 
     @Override
@@ -226,12 +219,16 @@ public class NotesActivity extends AppCompatActivity implements NotesAdapter.Lis
 
     @Override
     public void showAddNote() {
-
+        Log.i(TAG, "showAddNote: has been called");
+        Intent intent = new Intent(this, AddEditDetailNoteActivity.class);
+        startActivityForResult(intent, AddEditDetailNoteActivity.REQUEST_ADD_NOTE);
     }
 
     @Override
     public void showNoteDetailUi(String noteId) {
-
+        Intent intent = new Intent(this, AddEditDetailNoteActivity.class);
+        intent.putExtra(AddEditDetailNoteActivity.EXTRA_NOTE_ID, noteId);
+        startActivityForResult(intent, AddEditDetailNoteActivity.REQUEST_EDIT_NOTE);
     }
 
     @Override
@@ -256,7 +253,7 @@ public class NotesActivity extends AppCompatActivity implements NotesAdapter.Lis
 
     @Override
     public boolean isActive() {
-        return false;
+        return true;
     }
 
     @Override
@@ -266,11 +263,11 @@ public class NotesActivity extends AppCompatActivity implements NotesAdapter.Lis
 
     @Override
     public void setPresenter(NotesContract.Presenter presenter) {
-
+        mPresenter = presenter;
     }
 
     @Override
     public String getUserId() {
-        return null;
+        return mUserId;
     }
 }

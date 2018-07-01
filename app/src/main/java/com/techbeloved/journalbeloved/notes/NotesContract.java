@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.techbeloved.journalbeloved.BasePresenter;
 import com.techbeloved.journalbeloved.BaseView;
-import com.techbeloved.journalbeloved.data.Note;
+import com.techbeloved.journalbeloved.model.Note;
 
 import java.util.List;
 
@@ -26,6 +26,10 @@ public interface NotesContract {
 
         void showNoNotes();
 
+        void showProgress();
+
+        void hideProgress();
+
         boolean isActive();
 
         void showSuccessfullySavedMessage();
@@ -40,5 +44,7 @@ public interface NotesContract {
         void addNewNote();
 
         void openNoteDetails(@NonNull Note requestedNote);
+
+        void onItemClicked(String noteId);
     }
 }

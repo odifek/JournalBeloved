@@ -5,11 +5,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".notedetaileditadd.AddEditDetailNoteActivity">
 
     <include layout="@layout/include_toolbar"/>
 
-    <FrameLayout
+    <include
+        layout="@layout/notedetail_frag"
         android:id="@+id/contentFrame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

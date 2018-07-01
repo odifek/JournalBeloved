@@ -1,6 +1,5 @@
 package com.techbeloved.journalbeloved.interfaces;
 
-import com.google.firebase.database.DataSnapshot;
 import com.techbeloved.journalbeloved.model.Note;
 
 import java.util.List;
@@ -13,4 +12,6 @@ public interface FirebaseCallbacks {
     void onCancelled(String message);
 
     void onNotesLoaded(List<Note> notes);
+
+    void onNoteLoaded(Note note);
 }

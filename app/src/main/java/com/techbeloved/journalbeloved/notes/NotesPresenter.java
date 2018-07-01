@@ -1,32 +1,24 @@
 package com.techbeloved.journalbeloved.notes;
 
-import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.techbeloved.journalbeloved.data.Note;
-import com.techbeloved.journalbeloved.data.source.NotesDataSource;
-import com.techbeloved.journalbeloved.data.source.NotesRepository;
-import com.techbeloved.journalbeloved.notedetaileditadd.AddEditDetailNoteActivity;
+import com.techbeloved.journalbeloved.interfaces.FirebaseCallbacks;
+import com.techbeloved.journalbeloved.model.Note;
+import com.techbeloved.journalbeloved.util.FirebaseManager;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-public class NotesPresenter implements NotesContract.Presenter {
+public class NotesPresenter implements NotesContract.Presenter,FirebaseCallbacks {
 
     private static final String TAG = NotesPresenter.class.getSimpleName();
 
-    private final NotesRepository mNotesRepository;
     private final NotesContract.View mNotesView;
-    private boolean mFirstLoad = true;
 
-    public NotesPresenter(NotesRepository notesRepository, NotesContract.View notesView) {
-        mNotesRepository = checkNotNull(notesRepository, "notesrepository cannot be null");
-        mNotesView = checkNotNull(notesView, "notesView cannot be null");
+    private String mUserId;
 
-        mNotesView.setPresenter(this);
+    public NotesPresenter(NotesContract.View notesView) {
+        this.mNotesView = notesView;
     }
 
     @Override
@@ -36,57 +28,63 @@ public class NotesPresenter implements NotesContract.Presenter {
     }
 
     @Override
-    public void result(int requestCode, int resultCode) {
-        // COMPLETED: If a note was successfully added, show snackbar
-        if (AddEditDetailNoteActivity.REQUEST_ADD_NOTE == requestCode && resultCode == Activity.RESULT_OK) {
-            mNotesView.showSuccessfullySavedMessage();
+    public void onResume() {
+        if (mNotesView != null) {
+            mNotesView.showProgress();
+            mUserId = mNotesView.getUserId();
+
+            // Load the notes from firebase
+            FirebaseManager.getInstance(mUserId, this).loadNotes();
         }
     }
 
     @Override
-    public void loadNotes(boolean forceUpdate) {
-        loadNotes(forceUpdate || mFirstLoad, true);
+    public void onDestroy() {
+        FirebaseManager.getInstance(mUserId, this).destroy();
     }
 
-
-    private void loadNotes(boolean forceUpdate, final boolean showLoadingUi) {
-        if (showLoadingUi) {
-            mNotesView.setLoadingIndicator(true);
-        }
-        if (forceUpdate) {
-            mNotesRepository.refreshNotes();
-        }
-
-        mNotesRepository.getNotes(new NotesDataSource.LoadNotesCallback() {
-            @Override
-            public void onNotesLoaded(List<Note> notes) {
-
-                List<Note> notesToShow = new ArrayList<>(notes);
-
-                if (mNotesView.isActive()) {
-                    return;
-                }
-                Log.i(TAG, "onNotesLoaded: notes has been loaded: " + notes.size());
-                processNotes(notesToShow);
-            }
-
-            @Override
-            public void onDataNotAvailable() {
-                if (!mNotesView.isActive()) {
-                    return;
-                }
-                mNotesView.showLoadingNotesError();
-            }
-        });
-    }
-
-    private void processNotes(List<Note> notes) {
-        if (notes.isEmpty()) {
-            // TODO: 6/29/18 processEmptyNotes :  Show a message indicating there are no notes
-            Log.i(TAG, "processNotes: nothing to show");
-        } else {
-            // Show list of notes
+    @Override
+    public void onNotesLoaded(List<Note> notes) {
+        if (mNotesView != null) {
             mNotesView.showNotes(notes);
+            mNotesView.hideProgress();
+        }
+    }
+
+    // This is used only in the detail view
+    @Override
+    public void onNoteLoaded(Note note) {
+
+    }
+
+    @Override
+    public void onNewNote(Note note) {
+
+    }
+
+    @Override
+    public void onDataChanged(List<Note> currentNotes) {
+        if (mNotesView != null) {
+            // maybe use refresh notes
+            mNotesView.showNotes(currentNotes);
+            mNotesView.hideProgress();
+        }
+    }
+
+    @Override
+    public void onCancelled(String message) {
+
+    }
+
+    @Override
+    public void result(int requestCode, int resultCode) {
+
+    }
+
+    @Override
+    public void loadNotes(boolean forceUpdate) {
+        if (forceUpdate) {
+            FirebaseManager.getInstance(mUserId, this).refreshNotes();
         }
     }
 
@@ -98,5 +96,14 @@ public class NotesPresenter implements NotesContract.Presenter {
     @Override
     public void openNoteDetails(@NonNull Note requestedNote) {
 
+    }
+
+    @Override
+    public void onItemClicked(String noteId) {
+        mNotesView.showNoteDetailUi(noteId);
+    }
+
+    public NotesContract.View getNotesView() {
+        return mNotesView;
     }
 }

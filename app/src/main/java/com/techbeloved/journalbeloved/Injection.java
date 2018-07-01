@@ -10,7 +10,7 @@ import com.techbeloved.journalbeloved.util.AppExecutors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class Injection {
+class Injection {
 
     public static NotesRepository provideNotesRepository(@NonNull Context context) {
         checkNotNull(context);

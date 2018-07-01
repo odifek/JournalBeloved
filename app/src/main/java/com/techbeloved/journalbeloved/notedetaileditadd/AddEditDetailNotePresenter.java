@@ -2,58 +2,47 @@ package com.techbeloved.journalbeloved.notedetaileditadd;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
-import com.techbeloved.journalbeloved.data.Note;
-import com.techbeloved.journalbeloved.data.source.NotesDataSource;
+
+import com.techbeloved.journalbeloved.interfaces.FirebaseCallbacks;
+import com.techbeloved.journalbeloved.model.Note;
+import com.techbeloved.journalbeloved.util.FirebaseManager;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class AddEditDetailNotePresenter implements AddEditDetailNoteContract.Presenter, NotesDataSource.GetNoteCallback {
+public class AddEditDetailNotePresenter implements AddEditDetailNoteContract.Presenter, FirebaseCallbacks {
 
-    @NonNull
-    private final NotesDataSource mNotesRepository;
 
     @NonNull
     private final AddEditDetailNoteContract.View mAddNoteView;
 
+    private final String mUserId;
+
     @Nullable
-    private String mNoteId;
+    private final String mNoteId;
 
-    private boolean mIsDataMissing;
 
-    public AddEditDetailNotePresenter(@Nullable String noteId, @NonNull NotesDataSource notesRepository,
-                                      @NonNull AddEditDetailNoteContract.View addNoteView, boolean shouldLoadDataFromRepo) {
-        mNoteId = noteId;
-        mNotesRepository = checkNotNull(notesRepository);
-        mAddNoteView = checkNotNull(addNoteView);
-        mIsDataMissing = shouldLoadDataFromRepo;
-
-        mAddNoteView.setPresenter(this);
+    public AddEditDetailNotePresenter(String userId, @Nullable String noteId,
+                                      @NonNull AddEditDetailNoteContract.View addNoteView) {
+        this.mNoteId = noteId;
+        this.mAddNoteView = checkNotNull(addNoteView);
+        this.mAddNoteView.setPresenter(this);
+        this.mUserId = userId;
     }
 
     @Override
-    public void onNoteLoaded(Note note) {
-        if (mAddNoteView.isActive()) {
-            mAddNoteView.setTitle(note.getTitle());
-            mAddNoteView.setDetail(note.getDetail());
-        }
-        mIsDataMissing = false;
-    }
-
-    @Override
-    public void onDataNotAvailable() {
-        if (mAddNoteView.isActive()) {
-            mAddNoteView.showEmptyNoteError();
+    public void onResume() {
+        if (mAddNoteView != null) {
+            mAddNoteView.setPresenter(this);
         }
     }
 
     @Override
-    public void saveNote(String title, String detail) {
-        if (isNewNote()) {
-            createNote(title, detail);
-        } else {
-            updateNote(title, detail);
-        }
+    public void saveNote(Note note) {
+        FirebaseManager.getInstance(mUserId, this).saveNote(note);
     }
 
     @Override
@@ -61,45 +50,79 @@ public class AddEditDetailNotePresenter implements AddEditDetailNoteContract.Pre
         if (isNewNote()) {
             throw new RuntimeException("populateNote() was called but note is new");
         }
-        mNotesRepository.getNote(mNoteId, this);
+        FirebaseManager.getInstance(mUserId, this).loadNote(mNoteId);
     }
 
     @Override
     public boolean isDataMissing() {
-        return mIsDataMissing;
+        return mAddNoteView.isDataMissing();
     }
 
     @Override
     public void deleteNote() {
-
+        FirebaseManager.getInstance(mUserId, this).deleteNote(mNoteId);
+        mAddNoteView.showNotesList();
     }
 
     @Override
     public void start() {
-        if (!isNewNote() && mIsDataMissing) {
+        if (!isNewNote() && isDataMissing()) {
             populateNote();
         }
     }
 
-    public boolean isNewNote() {
+    @Override
+    public void onDestroy() {
+        FirebaseManager.getInstance(mUserId, this).destroy();
+    }
+
+    private boolean isNewNote() {
         return mNoteId == null;
     }
 
     private void createNote(String title, String detail){
         Note newNote = new Note(title, detail);
-        if (newNote.isEmpty()) {
+        if (TextUtils.isEmpty(newNote.getDetail()) && TextUtils.isEmpty(newNote.getTitle())) {
             mAddNoteView.showEmptyNoteError();
         } else {
-            mNotesRepository.saveNote(newNote);
+            FirebaseManager.getInstance(mUserId, this).saveNote(newNote);
             mAddNoteView.showNotesList();
         }
+
     }
 
     private void updateNote(String title, String detail) {
         if (isNewNote()) {
             throw new RuntimeException("updateNote() was called but note is new.");
         }
-        mNotesRepository.saveNote(new Note(title, detail, mNoteId));
         mAddNoteView.showNotesList();
+    }
+
+    @Override
+    public void onNewNote(com.techbeloved.journalbeloved.model.Note dataSnapshot) {
+
+    }
+
+    @Override
+    public void onDataChanged(List<com.techbeloved.journalbeloved.model.Note> currentNotes) {
+
+    }
+
+    @Override
+    public void onCancelled(String message) {
+
+    }
+
+    @Override
+    public void onNotesLoaded(List<com.techbeloved.journalbeloved.model.Note> notes) {
+
+    }
+
+    @Override
+    public void onNoteLoaded(Note note) {
+        if (note != null) {
+            mAddNoteView.setTitle(note.title);
+            mAddNoteView.setDetail(note.detail);
+        }
     }
 }
