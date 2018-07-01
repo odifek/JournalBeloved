@@ -153,6 +153,12 @@ public class NotesActivity extends AppCompatActivity implements NotesAdapter.Lis
         if (!TextUtils.isEmpty(name)) {
             User user = new User(name, mUserId);
             mFirebaseDatabase.child(mUserId).setValue(user);
+
+            // Create a placeholder note.
+            Note note = new Note("", "");
+            String id = mFirebaseDatabase.child(mUserId).child("notes").push().getKey();
+            note.setId(id);
+            mFirebaseDatabase.child(mUserId).child("notes").child(id).setValue(note);
         }
     }
 

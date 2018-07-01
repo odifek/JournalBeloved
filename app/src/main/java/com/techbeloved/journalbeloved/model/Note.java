@@ -10,7 +10,7 @@ import java.util.UUID;
 @IgnoreExtraProperties
 public class Note {
 
-    private String id;
+    public String id;
 
     public String title;
 

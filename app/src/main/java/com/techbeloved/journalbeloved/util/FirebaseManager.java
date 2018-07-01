@@ -35,23 +35,16 @@ public class FirebaseManager implements ValueEventListener {
     }
 
     private FirebaseManager(String userId, FirebaseCallbacks callbacks) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            // User is signed in
-            Log.i(TAG, "FirebaseManager: User is: " + user.getDisplayName());
-        } else {
-            // No user is signed in
-            Log.i(TAG, "FirebaseManager: User is not logged in");
-        }
         mNoteReference = FirebaseDatabase.getInstance()
                 .getReference()
-                .child(userId)
-                .child(Constants.NODE_NOTES);
+                .child(userId);
         this.mCallbacks = callbacks;
     }
 
     public void saveNote(Note note) {
-        mNoteReference.child(note.getId()).setValue(note);
+        String noteId = mNoteReference.child(Constants.NODE_NOTES).push().getKey();
+        note.setId(noteId);
+        mNoteReference.child(Constants.NODE_NOTES).child(note.getId()).setValue(note);
     }
 
     public void loadNotes() {
@@ -64,20 +57,21 @@ public class FirebaseManager implements ValueEventListener {
         addNoteListeners();
     }
 
+
     public void updateNote(Note note) {
-        mNoteReference.child(note.getId()).setValue(note);
+        mNoteReference.child(Constants.NODE_NOTES).child(note.getId()).setValue(note);
     }
 
     public void deleteNote(String noteId) {
-        mNoteReference.child(noteId).removeValue();
+        mNoteReference.child(Constants.NODE_NOTES).child(noteId).removeValue();
     }
 
     private void addNoteListeners() {
-        mNoteReference.addValueEventListener(this);
+        mNoteReference.child(Constants.NODE_NOTES).addValueEventListener(this);
     }
 
     private void removeListeners() {
-        mNoteReference.removeEventListener(this);
+        mNoteReference.child(Constants.NODE_NOTES).removeEventListener(this);
     }
 
     @Override
@@ -98,10 +92,11 @@ public class FirebaseManager implements ValueEventListener {
     public void destroy() {
         sFirebaseManager = null;
         mCallbacks = null;
+        removeListeners();
     }
 
     public void loadNote(String noteId) {
-        mNoteReference.child(noteId).addListenerForSingleValueEvent(new ValueEventListener() {
+        mNoteReference.child(Constants.NODE_NOTES).child(noteId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 mCallbacks.onNoteLoaded(dataSnapshot.getValue(Note.class));

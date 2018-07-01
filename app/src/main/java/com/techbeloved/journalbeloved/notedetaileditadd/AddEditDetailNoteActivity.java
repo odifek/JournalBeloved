@@ -16,6 +16,7 @@ import android.widget.EditText;
 
 import com.techbeloved.journalbeloved.R;
 import com.techbeloved.journalbeloved.model.Note;
+import com.techbeloved.journalbeloved.util.FirebaseManager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
